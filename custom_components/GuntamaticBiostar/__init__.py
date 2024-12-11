@@ -80,10 +80,26 @@ class Biostar:
                     dataValues = json.loads(r.replace(',,', ','))
 
         for i in range(len(dataDescription)):
-            key = dataDescription[i].get("name")
-            unitOfMeasurement = dataDescription[i].get("unit")
-            dataValue = dataValues[i]
-            data[key] = [dataValue, unitOfMeasurement]
+    try:
+        key = dataDescription[i].split(";")[0].strip()
+        unitOfMeasurement = dataDescription[i].split(";")[1].strip() if ";" in dataDescription[i] else None
+        
+        # Schlüssel "reserved" und leere Schlüssel ignorieren
+        if not key or key.lower() == "reserved":
+            _LOGGER.debug(f"Ignoring entry at index {i} with key '{key}'.")
+            continue
+        
+        # Überprüfen, ob Einheit existiert
+        if unitOfMeasurement is None:
+            _LOGGER.warning(f"No unit of measurement for key '{key}' at index {i}.")
+        
+        dataValue = dataValues[i] if i < len(dataValues) else None
+        
+        # Verarbeiten, wenn gültig
+        data[key] = [dataValue, unitOfMeasurement]
+    except Exception as e:
+        _LOGGER.error(f"Error processing data at index {i}: {e}")
+
 
         # Get data from old API
         APIEndpoints = [
